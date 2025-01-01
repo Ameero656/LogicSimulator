@@ -279,62 +279,434 @@ register_blueprint(Blueprint(
     )
 )
 
-# a 2-bit adder that takes two 2-bit inputs and produces a 3-bit output (sum and carry)
-# Input is a1, a0, b1, b0, carry
-# Output is sum1, sum0, carry
-# We can two full adders to calculate the sum and carry
+# an 8-bit adder that takes two 8-bit inputs and produces a 9-bit output (8b sum and 1b carry)
+# Input is a0, a1...a7, b0, b1...b7, carry
+# Output is sum0, sum1...sum7, carry_out
 # S0,C1 = FULL_ADDER(a0, b0, carry)
 # S1,C2 = FULL_ADDER(a1, b1, C1)
-# SUM = S1, S0
-# CARRY = C2
+#...
+# S7,C8 = FULL_ADDER(a7, b7, C7)
+# SUM = S0, S1...S7
+# CARRY_OUT = C8
 register_blueprint(Blueprint(
-    _id='2BIT_FULL_ADDER',
-    _node_list=['FULL_ADDER', 'FULL_ADDER'],
-    num_inputs=5,
-    num_outputs=3,
-    _connections=
-            {SinkPort(None, 0): SourcePort(1, 0),
-             SinkPort(None, 1): SourcePort(0, 0),
-             SinkPort(None, 2): SourcePort(1, 1),
-                SinkPort(1, 0): SourcePort(None, 0),
-                SinkPort(1, 1): SourcePort(None, 2),
-                SinkPort(1, 2): SourcePort(0, 1),
-                SinkPort(0, 0): SourcePort(None, 1),
-                SinkPort(0, 1): SourcePort(None, 3),
-                SinkPort(0, 2): SourcePort(None, 4)}
+    _id='8BIT_FULL_ADDER',
+    _node_list=['FULL_ADDER', 'FULL_ADDER', 'FULL_ADDER', 'FULL_ADDER', 'FULL_ADDER', 'FULL_ADDER', 'FULL_ADDER', 'FULL_ADDER'],
+    num_inputs=17,
+    num_outputs=9,
+    _connections= {
+            #outputs
+            SinkPort(None, 0): SourcePort(0, 0),
+            SinkPort(None, 1): SourcePort(1, 0),
+            SinkPort(None, 2): SourcePort(2, 0),
+            SinkPort(None, 3): SourcePort(3, 0),
+            SinkPort(None, 4): SourcePort(4, 0),
+            SinkPort(None, 5): SourcePort(5, 0),
+            SinkPort(None, 6): SourcePort(6, 0),
+            SinkPort(None, 7): SourcePort(7, 0),
+
+
+            #carry in/out
+            SinkPort(0, 1): SourcePort(None, 16),
+            SinkPort(1, 1): SourcePort(0, 1),
+            SinkPort(2, 1): SourcePort(1, 1),
+            SinkPort(3, 1): SourcePort(2, 1),
+            SinkPort(4, 1): SourcePort(3, 1),
+            SinkPort(5, 1): SourcePort(4, 1),
+            SinkPort(6, 1): SourcePort(5, 1),
+            SinkPort(7, 1): SourcePort(6, 1), 
+            SinkPort(8, 1): SourcePort(7, 1),
+            SinkPort(9, 1): SourcePort(8, 1),
+            SinkPort(10, 1): SourcePort(9, 1),
+            SinkPort(11, 1): SourcePort(10, 1),
+            SinkPort(12, 1): SourcePort(11, 1),
+            SinkPort(13, 1): SourcePort(12, 1),
+            SinkPort(14, 1): SourcePort(13, 1),
+            SinkPort(15, 1): SourcePort(14, 1),
+
+            SinkPort(None, 8): SourcePort(15, 1),
+
+            #input a
+            SinkPort(0, 0): SourcePort(None, 0),
+            SinkPort(1, 0): SourcePort(None, 1),
+            SinkPort(2, 0): SourcePort(None, 2),
+            SinkPort(3, 0): SourcePort(None, 3),
+            SinkPort(4, 0): SourcePort(None, 4),
+            SinkPort(5, 0): SourcePort(None, 5),
+            SinkPort(6, 0): SourcePort(None, 6),
+            SinkPort(7, 0): SourcePort(None, 7),
+
+            #input b
+            SinkPort(0, 1): SourcePort(None, 8),
+            SinkPort(1, 1): SourcePort(None, 9),
+            SinkPort(2, 1): SourcePort(None, 10),
+            SinkPort(3, 1): SourcePort(None, 11),
+            SinkPort(4, 1): SourcePort(None, 12),
+            SinkPort(5, 1): SourcePort(None, 13),
+            SinkPort(6, 1): SourcePort(None, 14),
+            SinkPort(7, 1): SourcePort(None, 15)
+
+        }
     )
 )
 
-# a 4-bit adder that takes two 4-bit inputs and produces a 5-bit output (sum and carry)
-# Input is a3, a2, a1, a0, b3, b2, b1, b0, carry
-# Output is sum3, sum2, sum1, sum0, carry
-# We can two 2-bit adders to calculate the sum and carry
-# S1,S0,C2 = 2BIT_FULL_ADDER(a1, a0, b1, b0, carry)
-# S3,S2,C4 = 2BIT_FULL_ADDER(a3, a2, b3, b2, C2)
-# SUM = S3, S2, S1, S0
-# CARRY = C4
+#8-bit Adder-Subtractor 
+#Converts carry in to subtractor mode using 2's complement (XORing B inputs)
 register_blueprint(Blueprint(
-    _id='4BIT_FULL_ADDER',
-    _node_list=['2BIT_FULL_ADDER', '2BIT_FULL_ADDER'],
-    num_inputs=9,
-    num_outputs=5,
-    _connections=
-            {SinkPort(None, 0): SourcePort(1, 0),
-             SinkPort(None, 1): SourcePort(1, 1),
-             SinkPort(None, 2): SourcePort(0, 0),
-             SinkPort(None, 3): SourcePort(0, 1),
-             SinkPort(None, 4): SourcePort(1, 2),
-                SinkPort(1, 0): SourcePort(None, 0), # a3
-                SinkPort(1, 1): SourcePort(None, 1), # a2
-                SinkPort(1, 2): SourcePort(None, 4), # b3
-                SinkPort(1, 3): SourcePort(None, 5), # b2
-                SinkPort(1, 4): SourcePort(0, 2),    # C2
-                SinkPort(0, 0): SourcePort(None, 2), # a1
-                SinkPort(0, 1): SourcePort(None, 3), # a0
-                SinkPort(0, 2): SourcePort(None, 6), # b1
-                SinkPort(0, 3): SourcePort(None, 7), # b0
-                SinkPort(0, 4): SourcePort(None, 8)} # carry
+    _id='8BIT_FULL_ADDER-SUBTRACTOR',
+    _node_list=['8BIT_FULL_ADDER', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR'],
+    num_inputs=17,
+    num_outputs=9,
+    _connections= {
+            # a inputs
+            SinkPort(0, 0): SourcePort(None, 0),
+            SinkPort(0, 1): SourcePort(None, 1),
+            SinkPort(0, 2): SourcePort(None, 2),
+            SinkPort(0, 3): SourcePort(None, 3),
+            SinkPort(0, 4): SourcePort(None, 4),
+            SinkPort(0, 5): SourcePort(None, 5),
+            SinkPort(0, 6): SourcePort(None, 6),
+            SinkPort(0, 7): SourcePort(None, 7),
+
+            # b inputs
+
+            SinkPort(0, 8): SourcePort(1, 0),
+            SinkPort(0, 9): SourcePort(1, 1),
+            SinkPort(0, 10): SourcePort(1, 2),
+            SinkPort(0, 11): SourcePort(1, 3),
+            SinkPort(0, 12): SourcePort(1, 4),
+            SinkPort(0, 13): SourcePort(1, 5),
+            SinkPort(0, 14): SourcePort(1, 6),
+            SinkPort(0, 15): SourcePort(1, 7),
+
+            #xoring B
+            SinkPort(1, 0): SourcePort(None, 8),
+            SinkPort(1, 1): SourcePort(None, 16),
+
+            SinkPort(1, 2): SourcePort(None, 9),
+            SinkPort(1, 3): SourcePort(None, 16),
+
+            SinkPort(1, 4): SourcePort(None, 10),
+            SinkPort(1, 5): SourcePort(None, 16),
+
+            SinkPort(1, 6): SourcePort(None, 11),
+            SinkPort(1, 7): SourcePort(None, 16),
+
+            SinkPort(1, 8): SourcePort(None, 12),
+            SinkPort(1, 9): SourcePort(None, 16),
+
+            SinkPort(1, 10): SourcePort(None, 13),
+            SinkPort(1, 11): SourcePort(None, 16),
+
+            SinkPort(1, 12): SourcePort(None, 14),
+            SinkPort(1, 13): SourcePort(None, 16),
+
+            SinkPort(1, 14): SourcePort(None, 15),
+            SinkPort(1, 15): SourcePort(None, 16),
+
+
+            #outputs
+
+            SinkPort(None, 0): SourcePort(0, 0),
+            SinkPort(None, 1): SourcePort(0, 1),
+            SinkPort(None, 2): SourcePort(0, 2),
+            SinkPort(None, 3): SourcePort(0, 3),
+            SinkPort(None, 4): SourcePort(0, 4),
+            SinkPort(None, 5): SourcePort(0, 5),
+            SinkPort(None, 6): SourcePort(0, 6),
+            SinkPort(None, 7): SourcePort(0, 7),
+            SinkPort(None, 8): SourcePort(0, 8)
+            
+        }
     )
+)
+
+# 8-bit ANDer 
+#takes two 8-bit inputs and produces an 8-bit output
+register_blueprint(Blueprint(
+    _id='8BIT_AND',
+    _node_list=['AND', 'AND', 'AND', 'AND', 'AND', 'AND', 'AND', 'AND'],
+    num_inputs=16,
+    num_outputs=8,
+    _connections= {
+            #outputs
+            SinkPort(None, 0): SourcePort(0, 0),
+            SinkPort(None, 1): SourcePort(1, 0),
+            SinkPort(None, 2): SourcePort(2, 0),
+            SinkPort(None, 3): SourcePort(3, 0),
+            SinkPort(None, 4): SourcePort(4, 0),
+            SinkPort(None, 5): SourcePort(5, 0),
+            SinkPort(None, 6): SourcePort(6, 0),
+            SinkPort(None, 7): SourcePort(7, 0),
+
+            #input a
+            SinkPort(0, 0): SourcePort(None, 0),
+            SinkPort(1, 0): SourcePort(None, 1),
+            SinkPort(2, 0): SourcePort(None, 2),
+            SinkPort(3, 0): SourcePort(None, 3),
+            SinkPort(4, 0): SourcePort(None, 4),
+            SinkPort(5, 0): SourcePort(None, 5),
+            SinkPort(6, 0): SourcePort(None, 6),
+            SinkPort(7, 0): SourcePort(None, 7),
+
+            #input b
+            SinkPort(0, 1): SourcePort(None, 8),
+            SinkPort(1, 1): SourcePort(None, 9),
+            SinkPort(2, 1): SourcePort(None, 10),
+            SinkPort(3, 1): SourcePort(None, 11),
+            SinkPort(4, 1): SourcePort(None, 12),
+            SinkPort(5, 1): SourcePort(None, 13),
+            SinkPort(6, 1): SourcePort(None, 14),
+            SinkPort(7, 1): SourcePort(None, 15)
+
+        }
+    )
+)
+
+#8-bit ORer
+#takes two 8-bit inputs and produces an 8-bit output
+register_blueprint(Blueprint(
+    _id='8BIT_OR',
+    _node_list=['OR', 'OR', 'OR', 'OR', 'OR', 'OR', 'OR', 'OR'],
+    num_inputs=16,
+    num_outputs=8,
+    _connections= {
+            #outputs
+            SinkPort(None, 0): SourcePort(0, 0),
+            SinkPort(None, 1): SourcePort(1, 0),
+            SinkPort(None, 2): SourcePort(2, 0),
+            SinkPort(None, 3): SourcePort(3, 0),
+            SinkPort(None, 4): SourcePort(4, 0),
+            SinkPort(None, 5): SourcePort(5, 0),
+            SinkPort(None, 6): SourcePort(6, 0),
+            SinkPort(None, 7): SourcePort(7, 0),
+
+            #input a
+            SinkPort(0, 0): SourcePort(None, 0),
+            SinkPort(1, 0): SourcePort(None, 1),
+            SinkPort(2, 0): SourcePort(None, 2),
+            SinkPort(3, 0): SourcePort(None, 3),
+            SinkPort(4, 0): SourcePort(None, 4),
+            SinkPort(5, 0): SourcePort(None, 5),
+            SinkPort(6, 0): SourcePort(None, 6),
+            SinkPort(7, 0): SourcePort(None, 7),
+
+            #input b
+            SinkPort(0, 1): SourcePort(None, 8),
+            SinkPort(1, 1): SourcePort(None, 9),
+            SinkPort(2, 1): SourcePort(None, 10),
+            SinkPort(3, 1): SourcePort(None, 11),
+            SinkPort(4, 1): SourcePort(None, 12),
+            SinkPort(5, 1): SourcePort(None, 13),
+            SinkPort(6, 1): SourcePort(None, 14),
+            SinkPort(7, 1): SourcePort(None, 15)
+
+        }
+    )
+)
+
+#8-bit NOTer
+#takes an 8-bit input and produces an 8-bit output
+register_blueprint(Blueprint(
+    _id='8BIT_NOT',
+    _node_list=['NOT', 'NOT', 'NOT', 'NOT', 'NOT', 'NOT', 'NOT', 'NOT'],
+    num_inputs=8,
+    num_outputs=8,
+    _connections= {
+            #outputs
+            SinkPort(None, 0): SourcePort(0, 0),
+            SinkPort(None, 1): SourcePort(1, 0),
+            SinkPort(None, 2): SourcePort(2, 0),
+            SinkPort(None, 3): SourcePort(3, 0),
+            SinkPort(None, 4): SourcePort(4, 0),
+            SinkPort(None, 5): SourcePort(5, 0),
+            SinkPort(None, 6): SourcePort(6, 0),
+            SinkPort(None, 7): SourcePort(7, 0),
+
+            #input a
+            SinkPort(0, 0): SourcePort(None, 0),
+            SinkPort(1, 0): SourcePort(None, 1),
+            SinkPort(2, 0): SourcePort(None, 2),
+            SinkPort(3, 0): SourcePort(None, 3),
+            SinkPort(4, 0): SourcePort(None, 4),
+            SinkPort(5, 0): SourcePort(None, 5),
+            SinkPort(6, 0): SourcePort(None, 6),
+            SinkPort(7, 0): SourcePort(None, 7)
+
+        }
+    )
+)
+
+#8-bit shift right
+#takes an 9-bit input (8-bit + carry bit) and produces an 8-bit output
+register_blueprint(Blueprint(
+    _id='8BIT_SHIFT_RIGHT',
+    _node_list = [],
+    num_inputs = 9,
+    num_outputs = 9,
+
+    _connections = {
+        #outputs
+        SinkPort(None, 0): SourcePort(None, 1),
+        SinkPort(None, 1): SourcePort(None, 2),
+        SinkPort(None, 2): SourcePort(None, 3),
+        SinkPort(None, 3): SourcePort(None, 4),
+        SinkPort(None, 4): SourcePort(None, 5),
+        SinkPort(None, 5): SourcePort(None, 6),
+        SinkPort(None, 6): SourcePort(None, 7),
+        SinkPort(None, 7): SourcePort(None, 8), #assign the final bit to the carry in
+
+        SinkPort(None, 8): SourcePort(None, 0), # assign carry out to the first bit
+        
+
+    }
+    )
+)
+
+#8-bit shift left
+#takes an 8-bit input and produces an 9-bit output (8-bit + carry bit)
+register_blueprint(Blueprint(
+    _id='8BIT_SHIFT_LEFT',
+    _node_list = [],
+    num_inputs = 9,
+    num_outputs = 9,
+
+    _connections = {
+        #outputs
+        SinkPort(None, 0): SourcePort(None, 8), #assign the first bit to the carry in
+        SinkPort(None, 1): SourcePort(None, 0),
+        SinkPort(None, 2): SourcePort(None, 1),
+        SinkPort(None, 3): SourcePort(None, 2),
+        SinkPort(None, 4): SourcePort(None, 3),
+        SinkPort(None, 5): SourcePort(None, 4),
+        SinkPort(None, 6): SourcePort(None, 5),
+        SinkPort(None, 7): SourcePort(None, 6), 
+
+        SinkPort(None, 8): SourcePort(None, 7), # assign carry out to the final bit
+        
+
+    }
+    )
+)
+
+#2x4-bit decoder
+#takes a 2-bit input and produces an 4-bit output
+register_blueprint(Blueprint(
+    _id='2X4BIT_DECODER',
+    _node_list = ['NOT', 'NOT', 'AND', 'AND', 'AND', 'AND'], #NOT A, NOT B, AND(A, B), AND(A, NOT B), AND(NOT A, B), AND(NOT A, NOT B)
+    num_inputs = 2,
+    num_outputs = 4,
+
+    _connections = {
+        #outputs
+        SinkPort(None, 0): SourcePort(2, 0),
+        SinkPort(None, 1): SourcePort(3, 0),
+        SinkPort(None, 2): SourcePort(4, 0),
+        SinkPort(None, 3): SourcePort(5, 0),
+
+        #NOT(a)
+        SinkPort(0, 0): SourcePort(None, 0),
+
+        #NOT(b)
+        SinkPort(1, 0): SourcePort(None, 1),
+
+        #AND(a, b)
+        SinkPort(2, 0): SourcePort(None, 0),
+        SinkPort(2, 1): SourcePort(None, 1),
+
+        #AND(a, NOT(b))
+        SinkPort(3, 0): SourcePort(None, 0),
+        SinkPort(3, 1): SourcePort(1, 0),
+
+        #AND(NOT(a), b)
+        SinkPort(4, 0): SourcePort(0, 0),
+        SinkPort(4, 1): SourcePort(None, 1),
+
+        #AND(NOT(a), NOT(b))
+        SinkPort(5, 0): SourcePort(0, 0),
+        SinkPort(5, 1): SourcePort(1, 0),
+    }
+    )
+)
+
+#3x8-bit decoder
+#takes a 3-bit input and produces an 8-bit output
+register_blueprint(Blueprint(
+    _id='3X8BIT_DECODER',
+    _node_list = ['2X4BIT_DECODER', '2X4BIT_DECODER'],
+    num_inputs = 3,
+    num_outputs = 8,
+
+    _connections = {
+        #outputs
+        SinkPort(None, 0): SourcePort(0, 0),
+        SinkPort(None, 1): SourcePort(0, 1),
+        SinkPort(None, 2): SourcePort(0, 2),
+        SinkPort(None, 3): SourcePort(0, 3),
+        SinkPort(None, 4): SourcePort(1, 0),
+        SinkPort(None, 5): SourcePort(1, 1),
+        SinkPort(None, 6): SourcePort(1, 2),
+        SinkPort(None, 7): SourcePort(1, 3),
+
+        #2X4BIT_DECODER(a, b)
+        SinkPort(0, 0): SourcePort(None, 0),
+        SinkPort(0, 1): SourcePort(None, 1),
+
+        #2X4BIT_DECODER(c, d)
+        SinkPort(1, 0): SourcePort(None, 2),
+        SinkPort(1, 1): SourcePort(None, 3),
+    }
+    )
+)
+
+#4x16-bit decoder
+#takes a 4-bit input and produces an 16-bit output
+register_blueprint(Blueprint(
+    _id='4X16BIT_DECODER',
+    _node_list = ['3X8BIT_DECODER', '3X8BIT_DECODER'],
+    num_inputs = 4,
+    num_outputs = 16,
+
+    _connections = {
+        #outputs
+        SinkPort(None, 0): SourcePort(0, 0),
+        SinkPort(None, 1): SourcePort(0, 1),
+        SinkPort(None, 2): SourcePort(0, 2),
+        SinkPort(None, 3): SourcePort(0, 3),
+        SinkPort(None, 4): SourcePort(0, 4),
+        SinkPort(None, 5): SourcePort(0, 5),
+        SinkPort(None, 6): SourcePort(0, 6),
+        SinkPort(None, 7): SourcePort(0, 7),
+        SinkPort(None, 8): SourcePort(1, 0),
+        SinkPort(None, 9): SourcePort(1, 1),
+        SinkPort(None, 10): SourcePort(1, 2),
+        SinkPort(None, 11): SourcePort(1, 3),
+        SinkPort(None, 12): SourcePort(1, 4),
+        SinkPort(None, 13): SourcePort(1, 5),
+        SinkPort(None, 14): SourcePort(1, 6),
+        SinkPort(None, 15): SourcePort(1, 7),
+
+        #3X8BIT_DECODER(a, b, c)
+        SinkPort(0, 0): SourcePort(None, 0),
+        SinkPort(0, 1): SourcePort(None, 1),
+        SinkPort(0, 2): SourcePort(None, 2),
+
+        #3X8BIT_DECODER(d, e, f)
+        SinkPort(1, 0): SourcePort(None, 3),
+        SinkPort(1, 1): SourcePort(None, 4),
+        SinkPort(1, 2): SourcePort(None, 5),
+    }
+    )
+)
+
+#8-bit Comparator
+#takes two 8-bit inputs and produces a 3-bit output (A<B, A=B, A>B)
+register_blueprint(Blueprint(
+    _id='8BIT_COMPARATOR',
+    _node_list = [''],
+    num_inputs = 16,
+    num_outputs = 3,
+    _connections= {}
+)
 )
 
 
