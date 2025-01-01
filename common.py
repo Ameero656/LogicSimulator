@@ -154,7 +154,8 @@ class Blueprint:
 
 
 BlueprintRepository: Dict[BlueprintID, Blueprint] = {}
-
+def register_blueprint(blueprint: Blueprint):
+    BlueprintRepository[blueprint.id] = blueprint
 
 
 # NAND Blueprint
@@ -172,16 +173,10 @@ class NAND_Blueprint(Blueprint):
     def evaluate(self, inputs: List[bool]) -> List[bool]:
         return [not (inputs[0] and inputs[1])]
 
-BlueprintRepository['NAND'] = NAND_Blueprint()
-
-def test_nand():
-    assert BlueprintRepository['NAND'].evaluate([False, False]) == [True]
-    assert BlueprintRepository['NAND'].evaluate([False, True]) == [True]
-    assert BlueprintRepository['NAND'].evaluate([True, False]) == [True]
-    assert BlueprintRepository['NAND'].evaluate([True, True]) == [False]
+register_blueprint(NAND_Blueprint())
 
 # NOT Blueprint (using NAND)
-BlueprintRepository['NOT'] = Blueprint(
+register_blueprint(Blueprint(
     _id='NOT',
     _node_list=['NAND'], 
     _connections=
@@ -189,14 +184,10 @@ BlueprintRepository['NOT'] = Blueprint(
                 SinkPort(0, 0): SourcePort(None, 0),
                 SinkPort(0, 1): True},
     num_inputs=1, 
-    num_outputs=1)
-
-def test_not():
-    assert BlueprintRepository['NOT'].evaluate([False]) == [True]
-    assert BlueprintRepository['NOT'].evaluate([True]) == [False]
+    num_outputs=1))
 
 # AND Blueprint (using NAND)
-BlueprintRepository['AND'] = Blueprint(
+register_blueprint(Blueprint(
     _id='AND',
     _node_list=['NAND', 'NAND'], 
     num_inputs=2, 
@@ -207,21 +198,12 @@ BlueprintRepository['AND'] = Blueprint(
                 SinkPort(1, 1): SourcePort(0, 0),
                 SinkPort(0, 0): SourcePort(None, 0),
                 SinkPort(0, 1): SourcePort(None, 1)}
-    
     )
-
-def test_and():
-    assert BlueprintRepository['AND'].evaluate([False, False]) == [False]
-    assert BlueprintRepository['AND'].evaluate([False, True]) == [False]
-    assert BlueprintRepository['AND'].evaluate([True, False]) == [False]
-    assert BlueprintRepository['AND'].evaluate([True, True]) == [True]
-        
-
-
-
+)
+ 
 # OR Blueprint (using NAND and NOT)
 # OR(a, b) = NAND(NOT(a), NOT(b))
-BlueprintRepository['OR'] = Blueprint(
+register_blueprint(Blueprint(
     _id='OR',
     _node_list=['NOT', 'NOT', 'NAND'], 
     num_inputs=2, 
@@ -233,9 +215,190 @@ BlueprintRepository['OR'] = Blueprint(
                 SinkPort(0, 0): SourcePort(None, 0),
                 SinkPort(1, 0): SourcePort(None, 1)}
     )
+)
+
+# XOR Blueprint (using NAND, NOT, AND, OR)
+# XOR(a, b) = OR(AND(a, NOT(b)), AND(NOT(a), b))
+register_blueprint(Blueprint(
+    _id='XOR',
+    _node_list=['NOT', 'AND', 'NOT', 'AND', 'OR'], 
+    num_inputs=2, 
+    num_outputs=1,
+    _connections=
+            {SinkPort(None, 0): SourcePort(4, 0),
+                SinkPort(4, 0): SourcePort(3, 0),
+                SinkPort(4, 1): SourcePort(1, 0),
+                SinkPort(3, 0): SourcePort(None, 0),
+                SinkPort(3, 1): SourcePort(2, 0),
+                SinkPort(1, 0): SourcePort(0, 0),
+                SinkPort(1, 1): SourcePort(None, 1),
+                SinkPort(2, 0): SourcePort(None, 1),
+                SinkPort(0, 0): SourcePort(None, 0)}
+    )
+)
+
+# an half adder that takes two 1-bit inputs and produces a 2-bit output (sum and carry)
+# The sum is XOR(a, b) and the carry is AND(a, b)
+register_blueprint(Blueprint(
+    _id='HALF_ADDER',
+    _node_list=['XOR', 'AND'], 
+    num_inputs=2, 
+    num_outputs=2,
+    _connections=
+            {SinkPort(None, 0): SourcePort(0, 0),
+                SinkPort(None, 1): SourcePort(1, 0),
+                SinkPort(0, 0): SourcePort(None, 0),
+                SinkPort(0, 1): SourcePort(None, 1),
+                SinkPort(1, 0): SourcePort(None, 0),
+                SinkPort(1, 1): SourcePort(None, 1)}
+    )
+)
+
+# a full adder that takes two 1-bit inputs and a carry input and produces a 2-bit output (sum and carry)
+# Input is a, b, carry
+# Output is sum, carry
+# Using the half adder and OR, we can calculate the sum and carry
+# S1,C1 = HALF_ADDER(a, b)
+# S2,C2 = HALF_ADDER(S1, carry)
+# SUM = S2
+# CARRY = OR(C1, C2)
+register_blueprint(Blueprint(
+    _id='FULL_ADDER',
+    _node_list=['HALF_ADDER', 'HALF_ADDER', 'OR'],
+    num_inputs=3,
+    num_outputs=2,
+    _connections=
+            {SinkPort(None, 0): SourcePort(1, 0),
+             SinkPort(None, 1): SourcePort(2, 0),
+                SinkPort(2, 0): SourcePort(0, 1),
+                SinkPort(2, 1): SourcePort(1, 1),
+                SinkPort(1, 0): SourcePort(0, 0),
+                SinkPort(1, 1): SourcePort(None, 2),
+                SinkPort(0, 0): SourcePort(None, 0),
+                SinkPort(0, 1): SourcePort(None, 1)}
+    )
+)
+
+# a 2-bit adder that takes two 2-bit inputs and produces a 3-bit output (sum and carry)
+# Input is a1, a0, b1, b0, carry
+# Output is sum1, sum0, carry
+# We can two full adders to calculate the sum and carry
+# S0,C1 = FULL_ADDER(a0, b0, carry)
+# S1,C2 = FULL_ADDER(a1, b1, C1)
+# SUM = S1, S0
+# CARRY = C2
+register_blueprint(Blueprint(
+    _id='2BIT_FULL_ADDER',
+    _node_list=['FULL_ADDER', 'FULL_ADDER'],
+    num_inputs=5,
+    num_outputs=3,
+    _connections=
+            {SinkPort(None, 0): SourcePort(1, 0),
+             SinkPort(None, 1): SourcePort(0, 0),
+             SinkPort(None, 2): SourcePort(1, 1),
+                SinkPort(1, 0): SourcePort(None, 0),
+                SinkPort(1, 1): SourcePort(None, 2),
+                SinkPort(1, 2): SourcePort(0, 1),
+                SinkPort(0, 0): SourcePort(None, 1),
+                SinkPort(0, 1): SourcePort(None, 3),
+                SinkPort(0, 2): SourcePort(None, 4)}
+    )
+)
+
+# a 4-bit adder that takes two 4-bit inputs and produces a 5-bit output (sum and carry)
+# Input is a3, a2, a1, a0, b3, b2, b1, b0, carry
+# Output is sum3, sum2, sum1, sum0, carry
+# We can two 2-bit adders to calculate the sum and carry
+# S1,S0,C2 = 2BIT_FULL_ADDER(a1, a0, b1, b0, carry)
+# S3,S2,C4 = 2BIT_FULL_ADDER(a3, a2, b3, b2, C2)
+# SUM = S3, S2, S1, S0
+# CARRY = C4
+register_blueprint(Blueprint(
+    _id='4BIT_FULL_ADDER',
+    _node_list=['2BIT_FULL_ADDER', '2BIT_FULL_ADDER'],
+    num_inputs=9,
+    num_outputs=5,
+    _connections=
+            {SinkPort(None, 0): SourcePort(1, 0),
+             SinkPort(None, 1): SourcePort(1, 1),
+             SinkPort(None, 2): SourcePort(0, 0),
+             SinkPort(None, 3): SourcePort(0, 1),
+             SinkPort(None, 4): SourcePort(1, 2),
+                SinkPort(1, 0): SourcePort(None, 0), # a3
+                SinkPort(1, 1): SourcePort(None, 1), # a2
+                SinkPort(1, 2): SourcePort(None, 4), # b3
+                SinkPort(1, 3): SourcePort(None, 5), # b2
+                SinkPort(1, 4): SourcePort(0, 2),    # C2
+                SinkPort(0, 0): SourcePort(None, 2), # a1
+                SinkPort(0, 1): SourcePort(None, 3), # a0
+                SinkPort(0, 2): SourcePort(None, 6), # b1
+                SinkPort(0, 3): SourcePort(None, 7), # b0
+                SinkPort(0, 4): SourcePort(None, 8)} # carry
+    )
+)
+
+
+def test_nand():
+    assert BlueprintRepository['NAND'].evaluate([False, False]) == [True]
+    assert BlueprintRepository['NAND'].evaluate([False, True]) == [True]
+    assert BlueprintRepository['NAND'].evaluate([True, False]) == [True]
+    assert BlueprintRepository['NAND'].evaluate([True, True]) == [False]
+
+def test_not():
+    assert BlueprintRepository['NOT'].evaluate([False]) == [True]
+    assert BlueprintRepository['NOT'].evaluate([True]) == [False]
+
+def test_and():
+    assert BlueprintRepository['AND'].evaluate([False, False]) == [False]
+    assert BlueprintRepository['AND'].evaluate([False, True]) == [False]
+    assert BlueprintRepository['AND'].evaluate([True, False]) == [False]
+    assert BlueprintRepository['AND'].evaluate([True, True]) == [True]
 
 def test_or():
     assert BlueprintRepository['OR'].evaluate([False, False]) == [False]
     assert BlueprintRepository['OR'].evaluate([False, True]) == [True]
     assert BlueprintRepository['OR'].evaluate([True, False]) == [True]
     assert BlueprintRepository['OR'].evaluate([True, True]) == [True]
+
+def test_xor():
+    assert BlueprintRepository['XOR'].evaluate([False, False]) == [False]
+    assert BlueprintRepository['XOR'].evaluate([False, True]) == [True]
+    assert BlueprintRepository['XOR'].evaluate([True, False]) == [True]
+    assert BlueprintRepository['XOR'].evaluate([True, True]) == [False]
+
+def test_half_adder():
+    assert BlueprintRepository['HALF_ADDER'].evaluate([False, False]) == [False, False]
+    assert BlueprintRepository['HALF_ADDER'].evaluate([False, True]) == [True, False]
+    assert BlueprintRepository['HALF_ADDER'].evaluate([True, False]) == [True, False]
+    assert BlueprintRepository['HALF_ADDER'].evaluate([True, True]) == [False, True]
+
+def test_full_adder():
+    assert BlueprintRepository['FULL_ADDER'].evaluate([False, False, False]) == [False, False]
+    assert BlueprintRepository['FULL_ADDER'].evaluate([False, False, True]) == [True, False]
+    assert BlueprintRepository['FULL_ADDER'].evaluate([False, True, False]) == [True, False]
+    assert BlueprintRepository['FULL_ADDER'].evaluate([False, True, True]) == [False, True]
+    assert BlueprintRepository['FULL_ADDER'].evaluate([True, False, False]) == [True, False]
+    assert BlueprintRepository['FULL_ADDER'].evaluate([True, False, True]) == [False, True]
+    assert BlueprintRepository['FULL_ADDER'].evaluate([True, True, False]) == [False, True]
+    assert BlueprintRepository['FULL_ADDER'].evaluate([True, True, True]) == [True, True]
+    # equivalently:
+    for a in [0,1]:
+        for b in [0,1]:
+            for c in [0,1]:
+                sum = a + b + c
+                assert BlueprintRepository['FULL_ADDER'].evaluate([a, b, c]) == [sum % 2, sum >= 2]
+
+def test_2bit_full_adder():
+    for a in [0,1,2,3]:
+        for b in [0,1,2,3]:
+            for c in [0,1]:
+                sum = a + b + c
+                assert BlueprintRepository['2BIT_FULL_ADDER'].evaluate([ (a>>1)&1, a&1, (b>>1)&1, b&1, c]) == [ (sum>>1)&1, sum&1, sum >= 4]
+
+def test_4bit_full_adder():
+    for a in [0,1,2,3,4,5,6,7]:
+        for b in [0,1,2,3,4,5,6,7]:
+            for c in [0,1]:
+                sum = a + b + c
+                assert BlueprintRepository['4BIT_FULL_ADDER'].evaluate([ (a>>3)&1, (a>>2)&1, (a>>1)&1, a&1, (b>>3)&1, (b>>2)&1, (b>>1)&1, b&1, c]) == [ (sum>>3)&1, (sum>>2)&1, (sum>>1)&1, sum&1, sum >= 16]
+
