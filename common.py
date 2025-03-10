@@ -273,9 +273,12 @@ register_blueprint(Blueprint(
                 SinkPort(2, 0): SourcePort(0, 1),
                 SinkPort(2, 1): SourcePort(1, 1),
                 SinkPort(1, 0): SourcePort(0, 0),
-                SinkPort(1, 1): SourcePort(None, 2),
+                
                 SinkPort(0, 0): SourcePort(None, 0),
-                SinkPort(0, 1): SourcePort(None, 1)}
+                SinkPort(0, 1): SourcePort(None, 1),
+                SinkPort(1, 1): SourcePort(None, 2),
+                
+                }
     )
 )
 
@@ -427,6 +430,8 @@ register_blueprint(Blueprint(
             SinkPort(0, 13): SourcePort(6, 0),
             SinkPort(0, 14): SourcePort(7, 0),
             SinkPort(0, 15): SourcePort(8, 0),
+
+            #carry
 
             SinkPort(0, 16): SourcePort(None, 16),
 
@@ -852,43 +857,75 @@ def test_8bit_full_adder():
                     (sum>>4)&1, (sum>>5)&1, (sum>>6)&1, (sum>>7)&1, 
                     sum >= 256]
 
-# def test_8bit_full_adder_subtractor():
-#     for a1 in range(-128,128):
-#         for b1 in range(-128,128):
-#             for c1 in [0,1]:
-#                 if c1 == 0:
-#                     sum1 = a1 + b1
-#                 else:
-#                     sum1 = a1 - b1
+def test_8bit_full_adder_subtractor():
+    bits = 8
+    overflow = (1<<bits)    
+    for a in range(-128, 128):
+        for b in range(-128, 128):
+            for c in [0,1]:
+                if c == 0:
+                    sum = a + b
+                else:
+                    sum = a - b 
 
-#                 a = a1 & 0b11111111
-#                 b = b1 & 0b11111111
-#                 c = c1
-#                 sum = sum1 & 0b11111111
+                ap = a if a>=0 else overflow+a
+                bp = b if b>=0 else overflow+b
 
-#                 print(f'{a1=}, {b1=}, {c1=}, {sum1=}')
+                print(f'{a=}, {b=}, {c=}, {sum=}')
+                # print(BlueprintRepository['8BIT_FULL_ADDER-SUBTRACTOR'].evaluate(
+                #     [ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
+                #     (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1,
 
-#                 assert BlueprintRepository['8BIT_FULL_ADDER'].evaluate(
-#                     [ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
-#                     (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1,
+                #     b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
+                #     (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1,
+                #     c]))
 
-#                     b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
-#                     (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1,
-#                     c]) \
-#                     ==  \
-#                     [ sum&1, (sum>>1)&1, (sum>>2)&1, (sum>>3)&1, 
-#                     (sum>>4)&1, (sum>>5)&1, (sum>>6)&1, (sum>>7)&1, 
-#                     sum1 >= 127 or sum1 < -128]
+                print([ sum&1, (sum>>1)&1, (sum>>2)&1, (sum>>3)&1, 
+                    (sum>>4)&1, (sum>>5)&1, (sum>>6)&1, (sum>>7)&1, 
+                    sum >= 128 or sum < 0])
+
+                if a==-128 and b==-127 and c==1:
+                    print('a',[ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
+                    (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1])
+
+                    print('b',[b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
+                    (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1])
+                    
+                    print('c',[c])
+
+                    print(
+                    BlueprintRepository['8BIT_FULL_ADDER'].evaluate(
+                    [ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
+                    (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1,
+
+                    b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
+                    (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1,
+                    c]))
 
 
-def test_2x4decoder():
-    for a in range(4):
-        for e in [0,1]:
-            if e == 0:
-                out = 0
-            else:
-                out = 1<<a
+                assert BlueprintRepository['8BIT_FULL_ADDER-SUBTRACTOR'].evaluate(
+                    [ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
+                    (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1,
 
-            print(f'{a=}, {e=}, {out=}')
+                    b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
+                    (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1,
+                    c]) \
+                    ==  \
+                    [ sum&1, (sum>>1)&1, (sum>>2)&1, (sum>>3)&1, 
+                    (sum>>4)&1, (sum>>5)&1, (sum>>6)&1, (sum>>7)&1, 
+                    ap+bp>=overflow]
 
-            assert BlueprintRepository['2X4BIT_DECODER'].evaluate([a&1, (a>>1)&1, e]) == [out&1, (out>>1)&1, (out>>2)&1, (out>>3)&1]
+
+                
+
+# def test_2x4decoder():
+#     for a in range(4):
+#         for e in [0,1]:
+#             if e == 0:
+#                 out = 0
+#             else:
+#                 out = 1<<a
+
+#             print(f'{a=}, {e=}, {out=}')
+
+#             assert BlueprintRepository['2X4BIT_DECODER'].evaluate([a&1, (a>>1)&1, e]) == [out&1, (out>>1)&1, (out>>2)&1, (out>>3)&1]
