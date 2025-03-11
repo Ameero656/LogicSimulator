@@ -1,0 +1,63 @@
+{
+    "node_list": [
+        "NAND",
+        "NAND"
+    ],
+    "connections": [
+        {
+            "sink": {
+                "node": null,
+                "port": 0
+            },
+            "source": {
+                "node": 1,
+                "port": 0
+            }
+        },
+        {
+            "sink": {
+                "node": 1,
+                "port": 0
+            },
+            "source": {
+                "node": 0,
+                "port": 0
+            }
+        },
+        {
+            "sink": {
+                "node": 1,
+                "port": 1
+            },
+            "source": {
+                "node": 0,
+                "port": 0
+            }
+        },
+        {
+            "sink": {
+                "node": 0,
+                "port": 0
+            },
+            "source": {
+                "node": null,
+                "port": 0
+            }
+        },
+        {
+            "sink": {
+                "node": 0,
+                "port": 1
+            },
+            "source": {
+                "node": null,
+                "port": 1
+            }
+        }
+    ],
+    "num_inputs": 2,
+    "num_outputs": 1,
+    "input_labels": [],
+    "output_labels": [],
+    "id": "AND"
+}

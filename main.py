@@ -21,7 +21,7 @@ def list_loaded_blueprints():
 def main():
     
     json_export_blueprint(BlueprintRepository["AND"], "AND_BLUEPRINT.json")
-    register_blueprint(json_import_blueprint("AND.json"))
+    register_blueprint(json_import_blueprint("AND_BLUEPRINT.json"))
     
     list_loaded_blueprints()
     make_truth_table("AND")
