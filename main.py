@@ -1,5 +1,5 @@
 
-from blueprint import BlueprintRepository, make_truth_table, json_export_blueprint, json_import_blueprint
+from blueprint import BlueprintRepository, make_truth_table, json_export_blueprint, json_import_blueprint, register_blueprint
 
 import embedded_blueprints
 import basic_blueprints
@@ -19,11 +19,12 @@ def list_loaded_blueprints():
 
 
 def main():
-    list_loaded_blueprints()
     
-    unit_tests.run_all_tests()
+    json_export_blueprint(BlueprintRepository["AND"], "AND_BLUEPRINT.json")
+    register_blueprint(json_import_blueprint("AND.json"))
+    
+    list_loaded_blueprints()
     make_truth_table("AND")
-    json_export_blueprint(BlueprintRepository["AND"], "AND.json")
 
 
 

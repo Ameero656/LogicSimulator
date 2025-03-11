@@ -235,7 +235,7 @@ def json_export_blueprint(blueprint: Blueprint, file_name: str):
     def blueprint_to_json(blueprint: Blueprint) -> Dict:
         return {
             'node_list': blueprint._node_list,
-            'connections': [ {'source': sink_port_to_json(sink_port), 'sink': source_port_to_json(source_port)} for sink_port, source_port in blueprint._connections.items()],
+            'connections': [ {'sink': sink_port_to_json(sink_port), 'source': source_port_to_json(source_port)} for sink_port, source_port in blueprint._connections.items()],
             'num_inputs': blueprint.num_inputs,
             'num_outputs': blueprint.num_outputs,
             'input_labels': blueprint.input_labels,
@@ -251,4 +251,36 @@ def json_export_blueprint(blueprint: Blueprint, file_name: str):
 def json_import_blueprint(file_name: str) -> Blueprint:
     """Import a blueprint from a json file
     """
-    pass
+
+    def source_port_from_json(source: Dict) -> SourcePort:
+        if source is None:
+            return None
+        elif 'constant' in source:
+            return source['constant']
+        else:
+            return SourcePort(node=source['node'], port=source['port'])
+
+    def sink_port_from_json(sink: Dict) -> SinkPort:
+        if sink is None:
+            return None
+        elif 'constant' in sink:
+            return sink['constant']
+        else:
+            return SinkPort(node=sink['node'], port=sink['port'])
+        
+    
+    def blueprint_from_json(blueprint: Dict) -> Blueprint:
+        print
+   
+        return Blueprint(
+            _node_list=blueprint['node_list'],
+            _connections={sink_port_from_json(blueprint["connections"][i]["sink"]): source_port_from_json(blueprint["connections"][i]["source"]) for i, _ in enumerate(blueprint['connections'])},
+            num_inputs=blueprint['num_inputs'],
+            num_outputs=blueprint['num_outputs'],
+            input_labels=blueprint['input_labels'],
+            output_labels=blueprint['output_labels'],
+            _id=blueprint['id']
+        )
+
+    with open(file_name, 'r') as f:
+        return blueprint_from_json(json.load(f))
