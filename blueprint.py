@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Tuple, NamedTuple, Dict, Union
 from prettytable import PrettyTable
-import itertools
+import itertools, json
 
 
 
@@ -206,3 +206,49 @@ def make_truth_table(blueprint_name: str):
         table.add_row(row)
 
     print(table)
+
+
+def json_export_blueprint(blueprint: Blueprint, file_name: str):
+    """Export a blueprint to a json file
+    """
+    
+    
+    def source_port_to_json(source: SourcePort) -> Dict:
+        if source is None:
+            return None
+        elif isinstance(source, int):
+            return {'constant': source}
+        else:
+            return {'node': source.node, 'port': source.port}
+
+    def sink_port_to_json(sink: SinkPort) -> Dict:
+        if sink is None:
+            return None
+        elif isinstance(sink, int):
+            return {'constant': sink}
+        else:
+            return {'node': sink.node, 'port': sink.port}
+        
+    def connection_to_json(connection: Connection) -> Dict:
+        return
+    
+    def blueprint_to_json(blueprint: Blueprint) -> Dict:
+        return {
+            'node_list': blueprint._node_list,
+            'connections': [ {'source': sink_port_to_json(sink_port), 'sink': source_port_to_json(source_port)} for sink_port, source_port in blueprint._connections.items()],
+            'num_inputs': blueprint.num_inputs,
+            'num_outputs': blueprint.num_outputs,
+            'input_labels': blueprint.input_labels,
+            'output_labels': blueprint.output_labels,
+            'id': blueprint.id
+        }
+
+    with open(file_name, 'w') as f:
+
+        json.dump(blueprint_to_json(blueprint), f, indent=4)
+
+
+def json_import_blueprint(file_name: str) -> Blueprint:
+    """Import a blueprint from a json file
+    """
+    pass

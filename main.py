@@ -1,5 +1,5 @@
 
-from blueprint import BlueprintRepository, make_truth_table
+from blueprint import BlueprintRepository, make_truth_table, json_export_blueprint, json_import_blueprint
 
 import embedded_blueprints
 import basic_blueprints
@@ -23,6 +23,7 @@ def main():
     
     unit_tests.run_all_tests()
     make_truth_table("AND")
+    json_export_blueprint(BlueprintRepository["AND"], "AND.json")
 
 
 
