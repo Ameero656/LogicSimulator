@@ -1,7 +1,13 @@
 
 from blueprint import BlueprintRepository, make_truth_table
 
-import embedded_blueprints, basic_blueprints, adder, shift_left, shift_right, uncategorized_blueprints, unit_tests
+import embedded_blueprints
+import basic_blueprints
+import adder_blueprints
+import shift_left_blueprints
+import shift_right_blueprints
+import uncategorized_blueprints
+import unit_tests
 
 
 

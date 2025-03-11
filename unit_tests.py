@@ -1,7 +1,10 @@
 from blueprint import BlueprintRepository
 import embedded_blueprints
 import basic_blueprints
-import adder
+import adder_blueprints
+import shift_left_blueprints
+import shift_right_blueprints
+import uncategorized_blueprints
 
 def test_nand():
     print("Running NAND unit test...", end="")
