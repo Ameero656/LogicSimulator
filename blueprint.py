@@ -1,6 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Tuple, NamedTuple, Dict, Union
+from prettytable import PrettyTable
+import itertools
+
 
 
 # A node is a instance of a Blueprint
@@ -160,3 +163,46 @@ class Blueprint:
 BlueprintRepository: Dict[BlueprintID, Blueprint] = {}
 def register_blueprint(blueprint: Blueprint):
     BlueprintRepository[blueprint.id] = blueprint
+
+
+def make_truth_table(blueprint_name: str):
+
+    print(f'{blueprint_name} Truth Table:')
+    
+    input_chars = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+    output_chars = input_chars[::-1]
+
+    blueprint = BlueprintRepository.get(blueprint_name)
+
+    if blueprint is None:
+        print(f"Error: Blueprint '{blueprint_name}' not found.")
+        return
+
+    num_inputs = blueprint.num_inputs
+    num_outputs = blueprint.num_outputs
+
+    table = PrettyTable()
+
+    if num_inputs == len(blueprint.input_labels):
+        input_vars = blueprint.input_labels
+    else:
+        input_vars = input_chars[:num_inputs]
+    
+    if num_outputs == len(blueprint.output_labels):
+        output_vars = blueprint.output_labels
+    else:
+        output_vars = output_chars[:num_outputs] 
+
+
+    table.field_names = input_vars + output_vars
+
+    
+    combinations = list(itertools.product([False, True], repeat=num_inputs))
+
+    for combination in combinations:
+        row = [int(value) for value in combination]  
+        outputs = blueprint.evaluate(combination)
+        row.extend(int(output) for output in outputs) 
+        table.add_row(row)
+
+    print(table)
