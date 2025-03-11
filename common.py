@@ -17,6 +17,7 @@ Connection = Tuple[SourcePort, SinkPort]
 BlueprintID = str
 
 
+
 # a data class
 @dataclass
 class Blueprint:
@@ -31,7 +32,10 @@ class Blueprint:
     _connections: Dict[SinkPort, Union[SourcePort, bool]]
     num_inputs: int
     num_outputs: int
+    input_labels: List[str]
+    output_labels: List[str]
     _id: BlueprintID = None
+    
 
     # Validate in post init
     def __post_init__(self):
@@ -163,7 +167,7 @@ def register_blueprint(blueprint: Blueprint):
 class NAND_Blueprint(Blueprint):
     def __init__(self):
         # connections contains a dummy connection to pass the validation check
-        super().__init__(_node_list=[], _connections={SinkPort(None, 0): True}, num_inputs=2, num_outputs=1)
+        super().__init__(_node_list=[], _connections={SinkPort(None, 0): True}, num_inputs=2, num_outputs=1, input_labels=["A", "B", "C"], output_labels=["X", "Y", "Z"])
 
     #override id
     @property
@@ -184,7 +188,9 @@ register_blueprint(Blueprint(
                 SinkPort(0, 0): SourcePort(None, 0),
                 SinkPort(0, 1): True},
     num_inputs=1, 
-    num_outputs=1))
+    num_outputs=1,
+    input_labels=[],
+    output_labels=[],))
 
 # AND Blueprint (using NAND)
 register_blueprint(Blueprint(
@@ -192,6 +198,8 @@ register_blueprint(Blueprint(
     _node_list=['NAND', 'NAND'], 
     num_inputs=2, 
     num_outputs=1,
+    input_labels=[],
+    output_labels=[],
     _connections=
             {SinkPort(None, 0): SourcePort(1, 0),
                 SinkPort(1, 0): SourcePort(0, 0),
@@ -208,6 +216,8 @@ register_blueprint(Blueprint(
     _node_list=['NOT', 'NOT', 'NAND'], 
     num_inputs=2, 
     num_outputs=1,
+    input_labels=[],
+    output_labels=[],
     _connections=
             {SinkPort(None, 0): SourcePort(2, 0),
                 SinkPort(2, 0): SourcePort(1, 0),
@@ -224,6 +234,8 @@ register_blueprint(Blueprint(
     _node_list=['NOT', 'AND', 'NOT', 'AND', 'OR'], 
     num_inputs=2, 
     num_outputs=1,
+    input_labels=["I1", "I2"],
+    output_labels=["O1"],
     _connections=
             {SinkPort(None, 0): SourcePort(4, 0),
                 SinkPort(4, 0): SourcePort(3, 0),
@@ -244,6 +256,8 @@ register_blueprint(Blueprint(
     _node_list=['XOR', 'AND'], 
     num_inputs=2, 
     num_outputs=2,
+    input_labels=[],
+    output_labels=[],
     _connections=
             {SinkPort(None, 0): SourcePort(0, 0),
                 SinkPort(None, 1): SourcePort(1, 0),
@@ -267,6 +281,8 @@ register_blueprint(Blueprint(
     _node_list=['HALF_ADDER', 'HALF_ADDER', 'OR'],
     num_inputs=3,
     num_outputs=2,
+    input_labels=[],
+    output_labels=[],
     _connections=
             {SinkPort(None, 0): SourcePort(1, 0),
              SinkPort(None, 1): SourcePort(2, 0),
@@ -291,6 +307,8 @@ register_blueprint(Blueprint(
     _node_list=['FULL_ADDER', 'FULL_ADDER'],
     num_inputs=5,
     num_outputs=3,
+    input_labels=[],
+    output_labels=[],
 
     _connections= {
             #outputs
@@ -321,6 +339,8 @@ register_blueprint(Blueprint(
     _node_list=['2BIT_FULL_ADDER', '2BIT_FULL_ADDER'],
     num_inputs=9,
     num_outputs=5,
+    input_labels=[],
+    output_labels=[],
 
     _connections= {
         SinkPort(None, 0): SourcePort(0, 0),
@@ -363,6 +383,8 @@ register_blueprint(Blueprint(
     _node_list=['4BIT_FULL_ADDER', '4BIT_FULL_ADDER'],
     num_inputs=17,
     num_outputs=9,
+    input_labels=[],
+    output_labels=[],
     _connections= {
         SinkPort(None, 0): SourcePort(0, 0),
         SinkPort(None, 1): SourcePort(0, 1),
@@ -409,6 +431,8 @@ register_blueprint(Blueprint(
     _node_list=['8BIT_FULL_ADDER', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR', 'XOR'],
     num_inputs=17,
     num_outputs=9,
+    input_labels=[],
+    output_labels=[],
     _connections= {
             # a inputs
             SinkPort(0, 0): SourcePort(None, 0),
@@ -484,6 +508,8 @@ register_blueprint(Blueprint(
     _node_list=['AND', 'AND', 'AND', 'AND', 'AND', 'AND', 'AND', 'AND'],
     num_inputs=16,
     num_outputs=8,
+    input_labels=[],
+    output_labels=[],
     _connections= {
             #outputs
             SinkPort(None, 0): SourcePort(0, 0),
@@ -526,6 +552,8 @@ register_blueprint(Blueprint(
     _node_list=['OR', 'OR', 'OR', 'OR', 'OR', 'OR', 'OR', 'OR'],
     num_inputs=16,
     num_outputs=8,
+    input_labels=[],
+    output_labels=[],
     _connections= {
             #outputs
             SinkPort(None, 0): SourcePort(0, 0),
@@ -568,6 +596,8 @@ register_blueprint(Blueprint(
     _node_list=['NOT', 'NOT', 'NOT', 'NOT', 'NOT', 'NOT', 'NOT', 'NOT'],
     num_inputs=8,
     num_outputs=8,
+    input_labels=[],
+    output_labels=[],
     _connections= {
             #outputs
             SinkPort(None, 0): SourcePort(0, 0),
@@ -600,6 +630,8 @@ register_blueprint(Blueprint(
     _node_list = [],
     num_inputs = 9,
     num_outputs = 9,
+    input_labels=[],
+    output_labels=[],
 
     _connections = {
         #outputs
@@ -626,6 +658,8 @@ register_blueprint(Blueprint(
     _node_list = [],
     num_inputs = 9,
     num_outputs = 9,
+    input_labels=[],
+    output_labels=[],
 
     _connections = {
         #outputs
@@ -652,6 +686,8 @@ register_blueprint(Blueprint(
     _node_list = ['NOT', 'NOT', 'AND', 'AND', 'AND', 'AND', 'AND', 'AND', 'AND', 'AND'], #NOT A, NOT B, AND(A, B), AND(A, NOT B), AND(NOT A, B), AND(NOT A, NOT B)
     num_inputs = 3,
     num_outputs = 4,
+    input_labels=[],
+    output_labels=[],
 
     _connections = {
         #outputs
@@ -775,6 +811,53 @@ register_blueprint(Blueprint(
 # takes two 8-bit inputs and produces a 3-bit output (A<B, A=B, A>B)
 
 
+def make_truth_table(blueprint_name: str):
+    from prettytable import PrettyTable
+    import itertools
+
+    input_chars = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+    output_chars = input_chars[::-1]
+
+    blueprint = BlueprintRepository.get(blueprint_name)
+
+    if blueprint is None:
+        print(f"Error: Blueprint '{blueprint_name}' not found.")
+        return
+
+    num_inputs = blueprint.num_inputs
+    num_outputs = blueprint.num_outputs
+
+    table = PrettyTable()
+
+    if num_inputs == len(blueprint.input_labels):
+        input_vars = blueprint.input_labels
+    else:
+        input_vars = input_chars[:num_inputs]
+    
+    if num_outputs == len(blueprint.output_labels):
+        output_vars = blueprint.output_labels
+    else:
+        output_vars = output_chars[:num_outputs] 
+
+
+    table.field_names = input_vars + output_vars
+
+    
+    combinations = list(itertools.product([True, False], repeat=num_inputs))
+
+    for combination in combinations:
+        row = [int(value) for value in combination]  
+        outputs = blueprint.evaluate(combination)
+        row.extend(int(output) for output in outputs) 
+        table.add_row(row)
+
+    print(table)
+
+
+
+
+
+
 
 def test_nand():
     assert BlueprintRepository['NAND'].evaluate([False, False]) == [True]
@@ -863,45 +946,16 @@ def test_8bit_full_adder_subtractor():
     for a in range(-128, 128):
         for b in range(-128, 128):
             for c in [0,1]:
+
+                ap, bp = overflow + a if a < 0 else a, overflow + b if b < 0 else b
+                
                 if c == 0:
                     sum = a + b
-                else:
-                    sum = a - b 
-
-                ap = a if a>=0 else overflow+a
-                bp = b if b>=0 else overflow+b
-
-                print(f'{a=}, {b=}, {c=}, {sum=}')
-                # print(BlueprintRepository['8BIT_FULL_ADDER-SUBTRACTOR'].evaluate(
-                #     [ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
-                #     (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1,
-
-                #     b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
-                #     (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1,
-                #     c]))
-
-                print([ sum&1, (sum>>1)&1, (sum>>2)&1, (sum>>3)&1, 
-                    (sum>>4)&1, (sum>>5)&1, (sum>>6)&1, (sum>>7)&1, 
-                    sum >= 128 or sum < 0])
-
-                if a==-128 and b==-127 and c==1:
-                    print('a',[ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
-                    (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1])
-
-                    print('b',[b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
-                    (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1])
+                    carry_out = ap + bp >=overflow
                     
-                    print('c',[c])
-
-                    print(
-                    BlueprintRepository['8BIT_FULL_ADDER'].evaluate(
-                    [ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
-                    (a>>4)&1, (a>>5)&1, (a>>6)&1, (a>>7)&1,
-
-                    b&1, (b>>1)&1, (b>>2)&1, (b>>3)&1, 
-                    (b>>4)&1, (b>>5)&1, (b>>6)&1, (b>>7)&1,
-                    c]))
-
+                else:
+                    sum = a - b
+                    carry_out = ap-bp>=0               
 
                 assert BlueprintRepository['8BIT_FULL_ADDER-SUBTRACTOR'].evaluate(
                     [ a&1, (a>>1)&1, (a>>2)&1, (a>>3)&1, 
@@ -913,7 +967,9 @@ def test_8bit_full_adder_subtractor():
                     ==  \
                     [ sum&1, (sum>>1)&1, (sum>>2)&1, (sum>>3)&1, 
                     (sum>>4)&1, (sum>>5)&1, (sum>>6)&1, (sum>>7)&1, 
-                    ap+bp>=overflow]
+                    carry_out]
+
+
 
 
                 
@@ -929,3 +985,6 @@ def test_8bit_full_adder_subtractor():
 #             print(f'{a=}, {e=}, {out=}')
 
 #             assert BlueprintRepository['2X4BIT_DECODER'].evaluate([a&1, (a>>1)&1, e]) == [out&1, (out>>1)&1, (out>>2)&1, (out>>3)&1]
+
+
+make_truth_table("XOR")
