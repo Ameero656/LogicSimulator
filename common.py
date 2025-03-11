@@ -843,7 +843,7 @@ def make_truth_table(blueprint_name: str):
     table.field_names = input_vars + output_vars
 
     
-    combinations = list(itertools.product([True, False], repeat=num_inputs))
+    combinations = list(itertools.product([False, True], repeat=num_inputs))
 
     for combination in combinations:
         row = [int(value) for value in combination]  
@@ -987,4 +987,4 @@ def test_8bit_full_adder_subtractor():
 #             assert BlueprintRepository['2X4BIT_DECODER'].evaluate([a&1, (a>>1)&1, e]) == [out&1, (out>>1)&1, (out>>2)&1, (out>>3)&1]
 
 
-make_truth_table("XOR")
+make_truth_table("4BIT_FULL_ADDER")
